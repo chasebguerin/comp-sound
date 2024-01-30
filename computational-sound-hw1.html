@@ -176,6 +176,19 @@
 			        stopNote(keyDiv.dataset.note.toString());
 			    });
 
+
+			    keyDiv.addEventListener("touchstart", function() {
+			        playNote(keyDiv.dataset.note.toString());
+			    });
+
+			    keyDiv.addEventListener("touchend", function() {
+			        stopNote(keyDiv.dataset.note.toString());
+			    });
+
+			    keyDiv.addEventListener("touchcancel", function() {
+			        stopNote(keyDiv.dataset.note.toString());
+			    });
+
 			    keyboard.appendChild(keyDiv);
 			});
 		}
