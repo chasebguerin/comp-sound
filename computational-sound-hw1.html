@@ -243,19 +243,18 @@
 		    activeOscillators[key] = { oscillator, gainNode };
 		}
 
-	    function adjustPolyphonyGain() {
-	        const activeCount = Object.keys(activeOscillators).length;
-	         // Avoid clipping
-	        const gainValue = activeCount > 0 ? 1 / Math.sqrt(activeCount) : 1;
-	        for (let key in activeOscillators) {
-	            activeOscillators[key].gainNode.gain.setValueAtTime(gainValue, audioCtx.currentTime);
-	        }
-	    }
+		function adjustPolyphonyGain() {
+		    const activeCount = Object.keys(activeOscillators).length;
+		    const gainValue = activeCount > 0 ? 0.7 / activeCount : 0.7;
+		    globalGain.gain.setValueAtTime(gainValue, audioCtx.currentTime);
+		}
+
+
 
 		function keyDown(event) {
 		    const key = (event.detail || event.which).toString();
 		    if (keyboardFrequencyMap[key] && !activeOscillators[key]) {
-		      playNote(key);
+				playNote(key);
 		    }
 		}
 
