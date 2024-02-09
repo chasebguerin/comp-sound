@@ -359,7 +359,6 @@
 
 		    if (keyboardFrequencyMap[key] && activeOscillators[key]) {
 		        activeOscillators[key].forEach(entry => {
-		            // Check if entry and its properties are defined before accessing them
 		            if (entry && entry.gainNode && entry.oscillator) {
 		                const { oscillator, gainNode } = entry;
 
@@ -370,7 +369,7 @@
 		            }
 		        });
 
-		        delete activeOscillators[key]; // Clear the stopped oscillators
+		        delete activeOscillators[key];
 
 		        adjustPolyphonyGain();
 		    }
@@ -378,16 +377,13 @@
 
 
 		function playAdditiveSynthesis(frequency, key) {
-		    // const partials = [1, 2, 3]; // Harmonic multiples
 	        const partialsCount = parseInt(document.getElementById('partials-select').value, 10);
-    		const partials = Array.from({ length: partialsCount }, (_, i) => i + 1); // Create an array [1, 2, ..., partialsCount
+    		const partials = Array.from({ length: partialsCount }, (_, i) => i + 1); 
 		    activeOscillators[key] = activeOscillators[key] || [];
 
 		    partials.forEach((multiple) => {
 		        const osc = audioCtx.createOscillator();
 		        const gainNode = audioCtx.createGain();
-
-		        // Setup oscillator
 		        osc.frequency.setValueAtTime(frequency * multiple, audioCtx.currentTime);
 		        osc.type = waveform.value;
 
@@ -396,14 +392,10 @@
 		        gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + attackTime); // Decay
 		        gainNode.gain.linearRampToValueAtTime(sustainLevel, audioCtx.currentTime + attackTime + decayTime); // Sustain
 
-		        // Connect oscillator to gain and gain to global gain
 		        osc.connect(gainNode);
 		        gainNode.connect(globalGain);
 
-		        // Start the oscillator
 		        osc.start();
-
-		        // Store oscillator and gainNode for later access
 		        activeOscillators[key].push({ oscillator: osc, gainNode: gainNode });
 		    });
 
@@ -418,10 +410,10 @@
 		    const modulator = audioCtx.createOscillator();
 		    const modulatorGain = audioCtx.createGain();
 		    const gainNode = audioCtx.createGain();
-			const lfoFrequency = parseFloat(lfoRate.value); // Get LFO rate value
+			const lfoFrequency = parseFloat(lfoRate.value);
 		    
 		    carrier.frequency.setValueAtTime(carrierFreq, audioCtx.currentTime);
-		    modulator.frequency.setValueAtTime(lfoFrequency, audioCtx.currentTime); // Use LFO rate for modulation frequency
+		    modulator.frequency.setValueAtTime(lfoFrequency, audioCtx.currentTime);
 
 		    carrier.type = waveform.value;
 		    modulator.type = waveform.value;
@@ -440,7 +432,6 @@
 		    carrier.start();
 		    modulator.start();
 
-		    // activeOscillators[key].push({ oscillator: carrier, gainNode: gainNode }, { oscillator: modulator });
 		    activeOscillators[key] = [{ oscillator: carrier, gainNode: gainNode }, { oscillator: modulator, gainNode: modulatorGain }];
 		}
 
@@ -452,11 +443,11 @@
 		    const modulator = audioCtx.createOscillator();
 		    const modulatorGain = audioCtx.createGain();
 		    const gainNode = audioCtx.createGain();
-		    const lfoFrequency = parseFloat(lfoRate.value); // Get LFO rate value
+		    const lfoFrequency = parseFloat(lfoRate.value);
 
 		    carrier.frequency.setValueAtTime(carrierFreq, audioCtx.currentTime);
-		    modulator.frequency.setValueAtTime(lfoFrequency, audioCtx.currentTime); // Use LFO rate for modulation frequency
-		    modulatorGain.gain.setValueAtTime(modIndex, audioCtx.currentTime); // Modulation index
+		    modulator.frequency.setValueAtTime(lfoFrequency, audioCtx.currentTime);
+		    modulatorGain.gain.setValueAtTime(modIndex, audioCtx.currentTime);
 
 		    carrier.type = waveform.value;
 		    modulator.type = waveform.value;
@@ -475,7 +466,6 @@
 		    carrier.start();
 		    modulator.start();
 
-		    // activeOscillators[key].push({ oscillator: carrier, gainNode: gainNode }, { oscillator: modulator });
 		    activeOscillators[key] = [{ oscillator: carrier, gainNode: gainNode }, { oscillator: modulator, gainNode: modulatorGain }];
 		}
 
@@ -493,8 +483,8 @@
 		window.addEventListener('keyup', keyUp, false);
 
 		function keyDown(event) {
-		    const key = event.key.toUpperCase(); // Ensure the key is in uppercase
-		    const keyCode = key.charCodeAt(0).toString(); // Get the char code as a string
+		    const key = event.key.toUpperCase();
+		    const keyCode = key.charCodeAt(0).toString();
 		    console.log(keyCode)
 		    if (keyboardFrequencyMap[keyCode] && !activeOscillators[keyCode]) {
 		        playNote(keyCode);
@@ -502,8 +492,8 @@
 		}
 
 		function keyUp(event) {
-		    const key = event.key.toUpperCase(); // Ensure the key is in uppercase
-		    const keyCode = key.charCodeAt(0).toString(); // Get the char code as a string
+		    const key = event.key.toUpperCase();
+		    const keyCode = key.charCodeAt(0).toString();
 		    if (keyboardFrequencyMap[keyCode]) {
 		        stopNote(keyCode);
 		    }
