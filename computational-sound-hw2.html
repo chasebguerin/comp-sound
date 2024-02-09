@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Oscillator Node Example</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <meta name="format-detection" content="telephone=no" />
+	<style type="text/css">
+		body {
+		    display: flex;
+		    justify-content: center;
+		    align-items: center;
+		    height: 100vh;
+		    background: black;
+		    color: white;
+		    font-family: 'Source Code Pro', monospace;
+		}
+
+		input[type="range"] {
+			height: 1px;
+		}
+
+		#select-container-one {
+			width: 460px;
+			display: flex;
+			flex-wrap: nowrap;
+			justify-content: center;
+			gap: 27px;
+		}
+
+		#select-container-two {
+			position: absolute;
+			bottom: 55px;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 452px;
+			gap: 27px;
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+
+		#keyboard {
+			position: absolute;
+			width: 40px;
+			height: 40px;
+			left: 50%;
+			top: 250px;
+			transform: translate(-50%, 0%);
+		}
+
+		.key {
+			position: absolute;
+			width: 40px;
+			height: 40px;
+			color: white;
+			font-size: 22px;
+			border-radius: 50%;
+			cursor: pointer;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			transform: rotate(var(--rotate)) translate(180px) rotate(var(--rotate-inverse));
+		}
+
+		.key.active-note {
+		    filter: drop-shadow(0 0 10px white);
+		    color: #444fff;
+		}
+
+		#activeKey {
+			display: none; 
+			position: absolute; 
+			top: 180px;
+			left: 50%;
+			font-size: 144px;
+			font-weight: 500;
+			transform: translate(-50%, 0%);
+		}
+
+		input[type="range"]::-webkit-slider-container, input[type="range"]::-webkit-media-slider-container {
+			background: white;
+			height: 2px;
+
+		}
+
+
+		.flex-column {
+			display: flex; 
+			flex-direction: column;
+			gap: 9px;
+			width: 47%;
+		}
+
+		.unactive {
+			opacity: .5 !important;
+			pointer-events: none;
+		}
+
+		.key:nth-child(1) { --rotate: calc(0 * 15deg); --rotate-inverse: calc(-0 * 15deg); }
+		.key:nth-child(2) { --rotate: calc(1 * 15deg); --rotate-inverse: calc(-1 * 15deg); }
+		.key:nth-child(3) { --rotate: calc(2 * 15deg); --rotate-inverse: calc(-2 * 15deg); }
+		.key:nth-child(4) { --rotate: calc(3 * 15deg); --rotate-inverse: calc(-3 * 15deg); }
+		.key:nth-child(5) { --rotate: calc(4 * 15deg); --rotate-inverse: calc(-4 * 15deg); }
+		.key:nth-child(6) { --rotate: calc(5 * 15deg); --rotate-inverse: calc(-5 * 15deg); }
+		.key:nth-child(7) { --rotate: calc(6 * 15deg); --rotate-inverse: calc(-6 * 15deg); }
+		.key:nth-child(8) { --rotate: calc(7 * 15deg); --rotate-inverse: calc(-7 * 15deg); }
+		.key:nth-child(9) { --rotate: calc(8 * 15deg); --rotate-inverse: calc(-8 * 15deg); }
+		.key:nth-child(10) { --rotate: calc(9 * 15deg); --rotate-inverse: calc(-9 * 15deg); }
+		.key:nth-child(11) { --rotate: calc(10 * 15deg); --rotate-inverse: calc(-10 * 15deg); }
+		.key:nth-child(12) { --rotate: calc(11 * 15deg); --rotate-inverse: calc(-11 * 15deg); }
+		.key:nth-child(13) { --rotate: calc(12 * 15deg); --rotate-inverse: calc(-12 * 15deg); }
+		.key:nth-child(14) { --rotate: calc(13 * 15deg); --rotate-inverse: calc(-13 * 15deg); }
+		.key:nth-child(15) { --rotate: calc(14 * 15deg); --rotate-inverse: calc(-14 * 15deg); }
+		.key:nth-child(16) { --rotate: calc(15 * 15deg); --rotate-inverse: calc(-15 * 15deg); }
+		.key:nth-child(17) { --rotate: calc(16 * 15deg); --rotate-inverse: calc(-16 * 15deg); }
+		.key:nth-child(18) { --rotate: calc(17 * 15deg); --rotate-inverse: calc(-17 * 15deg); }
+		.key:nth-child(19) { --rotate: calc(18 * 15deg); --rotate-inverse: calc(-18 * 15deg); }
+		.key:nth-child(20) { --rotate: calc(19 * 15deg); --rotate-inverse: calc(-19 * 15deg); }
+		.key:nth-child(21) { --rotate: calc(20 * 15deg); --rotate-inverse: calc(-20 * 15deg); }
+		.key:nth-child(22) { --rotate: calc(21 * 15deg); --rotate-inverse: calc(-21 * 15deg); }
+		.key:nth-child(23) { --rotate: calc(22 * 15deg); --rotate-inverse: calc(-22 * 15deg); }
+		.key:nth-child(24) { --rotate: calc(23 * 15deg); --rotate-inverse: calc(-23 * 15deg); }
+	</style>
+</head>
+<body>
+    <div id="keyboard"></div>
+    <span id="activeKey"></span>
+
+    <div id="select-container-two">
+
+	    <div id="select-container-one">
+	        <div id="waveform-container" class="flex-column">
+			    <label for="waveform-select">Waveform:</label>
+				<select id="waveform-select">
+				    <option value="sine">Sine</option>
+				    <option value="sawtooth">Sawtooth</option>
+				</select>
+			</div>
+
+	        <div id="synth-container" class="flex-column">
+		        <label for="synth-mode-select">Synth Mode:</label>
+		        <select id="synth-mode-select">
+		            <option value="additive">Additive</option>
+		            <option value="am">AM Synthesis</option>
+		            <option value="fm">FM Synthesis</option>
+		        </select>
+	        </div>
+
+			<div id="partials-container" class="flex-column">
+				<label for="partials-select">Partials:</label>
+				<select id="partials-select">
+				    <option value="1">1</option>
+				    <option value="2">2</option>
+				    <option value="3" selected>3</option>
+				    <option value="4">4</option>
+				    <option value="5">5</option>
+				</select>
+			</div>
+		</div>
+
+    	<div id="lfo-container" class="flex-column">
+	        <label for="lfo-rate">LFO Rate:</label>
+	        <input type="range" id="lfo-rate" min="0" max="20" value="5">
+    	</div>
+
+        <div id="modulation-container" class="flex-column">
+	        <label for="modulation-index">Modulation Index (FM):</label>
+	        <input type="range" id="modulation-index" min="0" max="1000" value="100">
+	    </div>
+
+		<div id="attack-container" class="flex-column">
+			<label for="attack-time">Attack Time: <span id="attack-time-value">0.1</span>s</label>
+			<input type="range" id="attack-time" min="0.01" max="1" step="0.01" value="0.1">
+		</div>
+
+		<div id="decay-container" class="flex-column">
+			<label for="decay-time">Decay Time: <span id="decay-time-value">0.2</span>s</label>
+			<input type="range" id="decay-time" min="0.01" max="2" step="0.01" value="0.2">
+		</div>
+
+		<div id="sustain-container" class="flex-column">
+			<label for="sustain-level">Sustain Level: <span id="sustain-level-value">0.7</span></label>
+			<input type="range" id="sustain-level" min="0" max="1" step="0.01" value="0.7">
+		</div>
+
+		<div id="release-container" class="flex-column">
+			<label for="release-time">Release Time: <span id="release-time-value">1</span>s</label>
+			<input type="range" id="release-time" min="0.1" max="5" step="0.1" value="1">
+		</div>
+	</div>
+
+
+    <script type="text/javascript">
+	    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const synthModeSelect = document.getElementById('synth-mode-select');
+        const lfoRate = document.getElementById('lfo-rate');
+        const modulationIndex = document.getElementById('modulation-index');
+
+		const waveformContainer = document.getElementById("waveform-container");
+		const synthContainer = document.getElementById("synth-container");
+		const partialsContainer = document.getElementById("partials-container");
+		const lfoContainer = document.getElementById("lfo-container");
+		const modulationContainer = document.getElementById("modulation-container");
+		const attackContainer = document.getElementById("attack-container");
+		const decayContainer = document.getElementById("decay-container");
+		const sustainContainer = document.getElementById("sustain-container");
+		const releaseContainer = document.getElementById("release-container");
+
+
+	    const waveform = document.getElementById('waveform-select');
+	    const globalGain = audioCtx.createGain();
+	    var oscillator = null;
+	    let activeOscillators = {};
+		globalGain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+		globalGain.connect(audioCtx.destination);
+
+	    let attackTime = 0.1;
+	    let decayTime = 0.2;
+	    let sustainLevel = 0.7;
+	    let releaseTime = 1;
+
+		const keyboardFrequencyMap = {
+		    '90': 261.625565300598634,  //Z - C
+		    '83': 277.182630976872096, //S - C#
+		    '88': 293.664767917407560,  //X - D
+		    '68': 311.126983722080910, //D - D#
+		    '67': 329.627556912869929,  //C - E
+		    '86': 349.228231433003884,  //V - F
+		    '71': 369.994422711634398, //G - F#
+		    '66': 391.995435981749294,  //B - G
+		    '72': 415.304697579945138, //H - G#
+		    '78': 440.000000000000000,  //N - A
+		    '74': 466.163761518089916, //J - A#
+		    '77': 493.883301256124111,  //M - B
+		    '81': 523.251130601197269,  //Q - C
+		    '50': 554.365261953744192, //2 - C#
+		    '87': 587.329535834815120,  //W - D
+		    '51': 622.253967444161821, //3 - D#
+		    '69': 659.255113825739859,  //E - E
+		    '82': 698.456462866007768,  //R - F
+		    '53': 739.988845423268797, //5 - F#
+		    '84': 783.990871963498588,  //T - G
+		    '54': 830.609395159890277, //6 - G#
+		    '89': 880.000000000000000,  //Y - A
+		    '55': 932.327523036179832, //7 - A#
+		    '85': 987.766602512248223,  //U - B
+		}; 
+
+
+	    const keyboard = document.getElementById('keyboard');
+	    const activeKeyElement = document.getElementById('activeKey');
+	    const keys = ['Z', 'S', 'X', 'D', 'C', 'V', 'G', 'B', 'H', 'N', 'J', 'M', 'Q', '2', 'W', '3', 'E', 'R', '5', 'T', '6', 'Y', '7', 'U'];
+
+
+
+		document.getElementById('attack-time').addEventListener('input', function() {
+		    document.getElementById('attack-time-value').textContent = this.value;
+		    attackTime = parseFloat(this.value);
+		});
+
+		document.getElementById('decay-time').addEventListener('input', function() {
+		    document.getElementById('decay-time-value').textContent = this.value;
+		    decayTime = parseFloat(this.value);
+		});
+
+		document.getElementById('sustain-level').addEventListener('input', function() {
+		    document.getElementById('sustain-level-value').textContent = this.value;
+		    sustainLevel = parseFloat(this.value);
+		});
+
+		document.getElementById('release-time').addEventListener('input', function() {
+		    document.getElementById('release-time-value').textContent = this.value;
+		    releaseTime = parseFloat(this.value);
+		});
+
+
+
+		window.addEventListener('load', initializeKeys);
+
+		function initializeKeys() {
+			keys.forEach((key, index) => {
+			    const keyDiv = document.createElement('div');
+			    keyDiv.className = 'key';
+			    keyDiv.textContent = key;
+			    keyDiv.dataset.note = key.charCodeAt(0);
+
+			    keyDiv.addEventListener("mousedown", function() {
+			        playNote(keyDiv.dataset.note.toString());
+			    });
+
+			    keyDiv.addEventListener("mouseup", function() {
+			        stopNote(keyDiv.dataset.note.toString());
+			    });
+
+			    keyDiv.addEventListener("mouseleave", function() {
+			        stopNote(keyDiv.dataset.note.toString());
+			    });
+
+
+			    keyDiv.addEventListener("touchstart", function() {
+			        playNote(keyDiv.dataset.note.toString());
+			    });
+
+			    keyDiv.addEventListener("touchend", function() {
+			        stopNote(keyDiv.dataset.note.toString());
+			    });
+
+			    keyDiv.addEventListener("touchcancel", function() {
+			        stopNote(keyDiv.dataset.note.toString());
+			    });
+
+			    keyboard.appendChild(keyDiv);
+			});
+		}
+
+
+		function playNote(key) {
+		    const keyElement = document.querySelector(`.key[data-note="${key}"]`);
+		    const frequency = keyboardFrequencyMap[key];
+
+		    switch (synthModeSelect.value) {
+		        case 'additive':
+		            playAdditiveSynthesis(frequency, key);
+		            break;
+		        case 'am':
+		            playAMSynthesis(frequency, key);
+		            break;
+		        case 'fm':
+		            playFMSynthesis(frequency, modulationIndex.value, key);
+		            break;
+		        default:
+		            console.log('Unknown synthesis mode');
+		    }
+
+		    if (keyElement) {
+		        keyElement.classList.add('active-note');
+		    }
+
+		    activeKeyElement.style.display = 'block';
+		    activeKeyElement.textContent = keys.find(k => k.charCodeAt(0).toString() === key);
+		}
+
+		function stopNote(key) {
+		    const keyElement = document.querySelector(`.key[data-note="${key}"]`);
+		    if (keyElement) {
+		        keyElement.classList.remove('active-note');
+		    }
+
+		    activeKeyElement.style.display = 'none';
+
+		    if (keyboardFrequencyMap[key] && activeOscillators[key]) {
+		        activeOscillators[key].forEach(entry => {
+		            // Check if entry and its properties are defined before accessing them
+		            if (entry && entry.gainNode && entry.oscillator) {
+		                const { oscillator, gainNode } = entry;
+
+		                gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+		                gainNode.gain.setValueAtTime(gainNode.gain.value, audioCtx.currentTime);
+		                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + releaseTime);
+		                oscillator.stop(audioCtx.currentTime + releaseTime);
+		            }
+		        });
+
+		        delete activeOscillators[key]; // Clear the stopped oscillators
+
+		        adjustPolyphonyGain();
+		    }
+		}
+
+
+		function playAdditiveSynthesis(frequency, key) {
+		    // const partials = [1, 2, 3]; // Harmonic multiples
+	        const partialsCount = parseInt(document.getElementById('partials-select').value, 10);
+    		const partials = Array.from({ length: partialsCount }, (_, i) => i + 1); // Create an array [1, 2, ..., partialsCount
+		    activeOscillators[key] = activeOscillators[key] || [];
+
+		    partials.forEach((multiple) => {
+		        const osc = audioCtx.createOscillator();
+		        const gainNode = audioCtx.createGain();
+
+		        // Setup oscillator
+		        osc.frequency.setValueAtTime(frequency * multiple, audioCtx.currentTime);
+		        osc.type = waveform.value;
+
+		        // ADSR envelope
+		        gainNode.gain.setValueAtTime(0, audioCtx.currentTime); // Attack
+		        gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + attackTime); // Decay
+		        gainNode.gain.linearRampToValueAtTime(sustainLevel, audioCtx.currentTime + attackTime + decayTime); // Sustain
+
+		        // Connect oscillator to gain and gain to global gain
+		        osc.connect(gainNode);
+		        gainNode.connect(globalGain);
+
+		        // Start the oscillator
+		        osc.start();
+
+		        // Store oscillator and gainNode for later access
+		        activeOscillators[key].push({ oscillator: osc, gainNode: gainNode });
+		    });
+
+		    adjustPolyphonyGain();
+		}
+
+
+		function playAMSynthesis(carrierFreq, key) {
+		    activeOscillators[key] = activeOscillators[key] || [];
+
+		    const carrier = audioCtx.createOscillator();
+		    const modulator = audioCtx.createOscillator();
+		    const modulatorGain = audioCtx.createGain();
+		    const gainNode = audioCtx.createGain();
+			const lfoFrequency = parseFloat(lfoRate.value); // Get LFO rate value
+		    
+		    carrier.frequency.setValueAtTime(carrierFreq, audioCtx.currentTime);
+		    modulator.frequency.setValueAtTime(lfoFrequency, audioCtx.currentTime); // Use LFO rate for modulation frequency
+
+		    carrier.type = waveform.value;
+		    modulator.type = waveform.value;
+
+		    modulator.connect(modulatorGain);
+		    modulatorGain.connect(carrier.frequency);
+
+		    // ADSR envelope
+		    gainNode.gain.setValueAtTime(0, audioCtx.currentTime); // Attack
+		    gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + attackTime); // Decay
+		    gainNode.gain.linearRampToValueAtTime(sustainLevel, audioCtx.currentTime + attackTime + decayTime); // Sustain
+
+		    carrier.connect(gainNode);
+		    gainNode.connect(globalGain);
+
+		    carrier.start();
+		    modulator.start();
+
+		    // activeOscillators[key].push({ oscillator: carrier, gainNode: gainNode }, { oscillator: modulator });
+		    activeOscillators[key] = [{ oscillator: carrier, gainNode: gainNode }, { oscillator: modulator, gainNode: modulatorGain }];
+		}
+
+
+		function playFMSynthesis(carrierFreq, modIndex, key) {
+		    activeOscillators[key] = activeOscillators[key] || [];
+
+		    const carrier = audioCtx.createOscillator();
+		    const modulator = audioCtx.createOscillator();
+		    const modulatorGain = audioCtx.createGain();
+		    const gainNode = audioCtx.createGain();
+		    const lfoFrequency = parseFloat(lfoRate.value); // Get LFO rate value
+
+		    carrier.frequency.setValueAtTime(carrierFreq, audioCtx.currentTime);
+		    modulator.frequency.setValueAtTime(lfoFrequency, audioCtx.currentTime); // Use LFO rate for modulation frequency
+		    modulatorGain.gain.setValueAtTime(modIndex, audioCtx.currentTime); // Modulation index
+
+		    carrier.type = waveform.value;
+		    modulator.type = waveform.value;
+
+		    modulator.connect(modulatorGain);
+		    modulatorGain.connect(carrier.frequency);
+
+		    // ADSR envelope
+		    gainNode.gain.setValueAtTime(0, audioCtx.currentTime); // Attack
+		    gainNode.gain.linearRampToValueAtTime(1, audioCtx.currentTime + attackTime); // Decay
+		    gainNode.gain.linearRampToValueAtTime(sustainLevel, audioCtx.currentTime + attackTime + decayTime); // Sustain
+
+		    carrier.connect(gainNode);
+		    gainNode.connect(globalGain);
+
+		    carrier.start();
+		    modulator.start();
+
+		    // activeOscillators[key].push({ oscillator: carrier, gainNode: gainNode }, { oscillator: modulator });
+		    activeOscillators[key] = [{ oscillator: carrier, gainNode: gainNode }, { oscillator: modulator, gainNode: modulatorGain }];
+		}
+
+
+		function adjustPolyphonyGain() {
+		    const activeCount = Object.keys(activeOscillators).length;
+		    const gainValue = activeCount > 0 ? 0.7 / activeCount : 0.7;
+		    globalGain.gain.setValueAtTime(gainValue, audioCtx.currentTime);
+		}
+
+
+
+		// KEY DOWN & KEY UP FUNCTIONS
+		window.addEventListener('keydown', keyDown, false);
+		window.addEventListener('keyup', keyUp, false);
+
+		function keyDown(event) {
+		    const key = event.key.toUpperCase(); // Ensure the key is in uppercase
+		    const keyCode = key.charCodeAt(0).toString(); // Get the char code as a string
+		    console.log(keyCode)
+		    if (keyboardFrequencyMap[keyCode] && !activeOscillators[keyCode]) {
+		        playNote(keyCode);
+		    }
+		}
+
+		function keyUp(event) {
+		    const key = event.key.toUpperCase(); // Ensure the key is in uppercase
+		    const keyCode = key.charCodeAt(0).toString(); // Get the char code as a string
+		    if (keyboardFrequencyMap[keyCode]) {
+		        stopNote(keyCode);
+		    }
+		}
+
+
+    </script>
+</body>
+</html>
