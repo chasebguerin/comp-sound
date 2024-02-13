@@ -168,12 +168,12 @@
 		</div>
 
     	<div id="lfo-container" class="flex-column">
-	        <label for="lfo-rate">LFO Rate:</label>
+	        <label for="lfo-rate">LFO Rate: <span id="lfo-rate-value">5</span>Hz</label>
 	        <input type="range" id="lfo-rate" min="0" max="20" value="5">
     	</div>
 
         <div id="modulation-container" class="flex-column">
-	        <label for="modulation-index">Modulation Index (FM):</label>
+	        <label for="modulation-index">Modulation Index: <span id="modulation-index-value">100</span></label>
 	        <input type="range" id="modulation-index" min="0" max="1000" value="100">
 	    </div>
 
@@ -261,6 +261,13 @@
 	    const keys = ['Z', 'S', 'X', 'D', 'C', 'V', 'G', 'B', 'H', 'N', 'J', 'M', 'Q', '2', 'W', '3', 'E', 'R', '5', 'T', '6', 'Y', '7', 'U'];
 
 
+        document.getElementById('lfo-rate').addEventListener('input', function() {
+            document.getElementById('lfo-rate-value').textContent = this.value;
+        });
+
+        document.getElementById('modulation-index').addEventListener('input', function() {
+            document.getElementById('modulation-index-value').textContent = this.value;
+        });
 
 		document.getElementById('attack-time').addEventListener('input', function() {
 		    document.getElementById('attack-time-value').textContent = this.value;
@@ -282,7 +289,9 @@
 		    releaseTime = parseFloat(this.value);
 		});
 
+		document.getElementById("synth-mode-select").addEventListener("change", adjustModeVisibility);
 
+		document.addEventListener("DOMContentLoaded", adjustModeVisibility);
 
 		window.addEventListener('load', initializeKeys);
 
@@ -347,6 +356,29 @@
 
 		    activeKeyElement.style.display = 'block';
 		    activeKeyElement.textContent = keys.find(k => k.charCodeAt(0).toString() === key);
+		}
+
+		function adjustModeVisibility() {
+		    switch (synthModeSelect.value) {
+		        case 'additive':
+		        	document.getElementById("partials-container").classList.remove("unactive");
+		        	document.getElementById("lfo-container").classList.add("unactive");
+		        	document.getElementById("modulation-container").classList.add("unactive");
+		            break;
+		        case 'am':
+		        	document.getElementById("partials-container").classList.add("unactive");
+		        	document.getElementById("lfo-container").classList.remove("unactive");
+		        	document.getElementById("modulation-container").classList.remove("unactive");
+		            break;
+		        case 'fm':
+		        	document.getElementById("partials-container").classList.add("unactive");
+		        	document.getElementById("lfo-container").classList.remove("unactive");
+		        	document.getElementById("modulation-container").classList.remove("unactive");
+		            break;
+		        default:
+		            console.log('Unknown synthesis mode');
+		    }
+
 		}
 
 		function stopNote(key) {
