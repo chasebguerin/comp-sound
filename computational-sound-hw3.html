@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Water Drop Sink Sound</title>
+
+    <style type="text/css">
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .sink {
+            height: 100%;
+            width: 100%;
+            object-fit: cover;
+            display: block;
+            position: absolute;
+            top: 0;
+            z-index: -1;
+        }
+
+        .play-pause-container {
+            padding: 10px;
+            background: rgba(182, 182, 182, 0.7);
+            display: flex;
+            width: 390px;
+            justify-content: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+        }
+
+        #visualizer,
+        #visualizer-babbling {
+            width: 200px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0);
+            position: absolute;
+            top: 0;
+            right: 0;
+            z-index: 2;
+            filter: brightness(0.6) contrast(5);
+        }
+
+        .text-container {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            position: absolute;
+            width: 400px;
+            height: 600px;
+            background: rgba(255, 255, 255, .5);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            padding: 50px;
+            overflow: scroll;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="play-pause-container">
+        <button id="playBtn">Play Water Drop</button>
+        <button id="pauseBtn" disabled>Pause Water Drop</button>
+        <button id="toggleBtn">Play Babbling Brook</button>
+    </div>
+    <div>
+        <p class="text-container">
+            I aimed to recreate the sound of a water drop falling into a sink, where the primary tone as the water hits the surface dissipates into a series of quieter, secondary tones as the resulting ripples settle.
+            <br>
+            <br>
+            <b>Key Parts of the Code:</b>
+            <br>
+            <b>Oscillator:</b> Generates a sine wave tone (600 Hz) that simulates the initial impact of the water drop. 
+            <br>
+            <br>
+            <b>Gain Node:</b> It starts loud and quickly decays, mimicking how a water drop sound fades away.
+            <br>
+            <br>
+            <b>Lowpass Filter:</b> Shapes the sound to make it more natural and less harsh by cutting off frequencies above 60 Hz
+            <br>
+            <br>
+            <b>Audio Signal Flow Graph:</b>
+            <br>
+            Oscillator -> Lowpass Filter -> Gain Node -> AudioContext Destination.
+            <br>
+            <br>
+            <b>Process and Experience:</b>
+            <br>
+            Creating this sound involved experimenting with different frequencies, rates of decay, and gain node parameters to produce a sound that closely resembles water dripping from the sink. I chose to use a sine wave for its smooth and natural tone and lowpass filtered it to soften the sound to a liquid. 
+            <br>
+            <br>
+            <b>Synthesis Types and Integration:</b>
+            <br>
+            I used Subtractive synthesis (via the lowpass filter to sculpt the sound) & 
+            Amplitude modulation (via the gain node to simulate the sound's decay).
+            These methods fit together by first generating a raw sound via the oscillator and then shaping and controlling this sound to mimic a water drop from the sink.
+            <br>
+            <br>
+            <b>Creative Choices/ extra step:</b>
+            <br>
+            Since water does not drip in a frequent manner that is predictable, I implemented a random setTimeout function that varies the schedule of when the water will drop. And I also embedded a frequency analyzer to visually show the frequencies of the water droplets and also a frequency analyzer for the Babbling Brook sound. I set it up in such a way in which you can play both the water drop sound and the babbling brook sound together or individually.
+
+        </p>
+    </div>
+    <canvas id="visualizer"></canvas>
+    <canvas id="visualizer-babbling"></canvas>
+    <img class="sink" src="https://media.istockphoto.com/id/1010109220/video/water-drops-falling-from-kitchen-tap-dish-dryer-rack-with-plates-on-background-closeup-4k.jpg?s=640x640&k=20&c=dVS4gbQHtxEQN_60nKVXtuzPvDKkCcPIGGGGitmkcbw=">
+
+
+
+    <script>
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        var audioCtx = new AudioContext();
+        var isPlaying = false;
+        var brookSources;
+        var analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 8192;
+        var bufferLength = analyser.frequencyBinCount;
+        var dataArray = new Uint8Array(bufferLength);
+
+        var canvas = document.getElementById("visualizer-babbling");
+        var canvasCtx = canvas.getContext("2d");
+
+        function draw() {
+            requestAnimationFrame(draw);
+            analyser.getByteFrequencyData(dataArray);
+            canvasCtx.fillStyle = 'rgb(255, 255, 255, .0)';
+            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+            var barWidth = (canvas.width / bufferLength) * 2.5;
+            var barHeight;
+            var x = 0;
+            for(var i = 0; i < bufferLength; i++) {
+                barHeight = dataArray[i];
+                canvasCtx.fillStyle = "black";
+                canvasCtx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight / 2);
+                x += barWidth + 2;
+            }
+        }
+
+        function createBrownNoise() {
+            var bufferSize = audioCtx.sampleRate * 10;
+            var noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            var output = noiseBuffer.getChannelData(0);
+            var lastOut = 0.0;
+            for (var i = 0; i < bufferSize; i++) {
+                var brown = Math.random() * 2 - 1;
+                output[i] = (lastOut + (0.02 * brown)) / 1.02;
+                lastOut = output[i];
+                output[i] *= 3.5;
+            }
+            var brownNoiseSource = audioCtx.createBufferSource();
+            brownNoiseSource.buffer = noiseBuffer;
+            brownNoiseSource.loop = true;
+            return brownNoiseSource;
+        }
+
+        function setupBrook() {
+            var brownNoise1 = createBrownNoise();
+            var brownNoise2 = createBrownNoise();
+
+            var lpf1 = audioCtx.createBiquadFilter();
+            lpf1.type = 'lowpass';
+            lpf1.frequency.value = 900;
+
+            var rhp1 = audioCtx.createBiquadFilter();
+            rhp1.type = 'highpass';
+            rhp1.frequency.value = 90000;
+
+            var lpf2 = audioCtx.createBiquadFilter();
+            lpf2.type = 'lowpass';
+            lpf2.frequency.value = 400;
+
+            var rhp2 = audioCtx.createBiquadFilter();
+            rhp2.type = 'highpass';
+            rhp2.frequency.value = 700;
+
+            var hpf = audioCtx.createBiquadFilter();
+            hpf.type = 'highpass';
+            hpf.frequency.value = 400;
+
+            var lpf = audioCtx.createBiquadFilter();
+            hpf.type = 'lowpass';
+            hpf.frequency.value = 40000;
+
+            var finhpf = audioCtx.createBiquadFilter();
+            hpf.type = 'highpass';
+            hpf.frequency.value = 800;
+
+            var gain1 = audioCtx.createGain();
+            gain1.gain.value = 6;
+
+            var gain2 = audioCtx.createGain();
+            gain2.gain.value = .1;
+
+            brownNoise1.connect(lpf1);
+            lpf1.connect(rhp1);
+            rhp1.connect(hpf);
+            hpf.connect(lpf);
+            lpf.connect(finhpf);
+            finhpf.connect(analyser);
+            analyser.connect(gain1);
+            gain1.connect(audioCtx.destination);
+
+            brownNoise2.connect(lpf2);
+            lpf2.connect(rhp2);
+            rhp2.connect(hpf);
+            hpf.connect(lpf);
+            lpf.connect(finhpf);
+            finhpf.connect(analyser);
+            analyser.connect(gain2);
+            gain2.connect(audioCtx.destination);
+
+
+            brownNoise1.start(0);
+            brownNoise2.start(0);
+
+            return { brownNoise1, brownNoise2 };
+        }
+
+        function startBrook() {
+            if (!isPlaying) {
+                draw()
+                brookSources = setupBrook();
+                isPlaying = true;
+                document.getElementById('toggleBtn').textContent = 'Pause Babbling Brook';
+            }
+        }
+
+        function stopBrook() {
+            if (isPlaying && brookSources) {
+                brookSources.brownNoise1.stop();
+                brookSources.brownNoise2.stop();
+                brookSources.brownNoise1.disconnect();
+                brookSources.brownNoise2.disconnect();
+                isPlaying = false;
+                document.getElementById('toggleBtn').textContent = 'Play Babbling Brook';
+            }
+        }
+
+        document.getElementById('toggleBtn').addEventListener('click', function() {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume().then(() => {
+                    if (!isPlaying) {
+                        startBrook();
+                    } else {
+                        stopBrook();
+                    }
+                });
+            } else {
+                if (!isPlaying) {
+                    startBrook();
+                } else {
+                    stopBrook();
+                }
+            }
+        });
+    </script>
+
+    <script>
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        var audioCtx = new AudioContext();
+        var analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 8192;
+        var bufferLength = analyser.frequencyBinCount;
+        var dataArray = new Uint8Array(bufferLength);
+
+        var canvas = document.getElementById("visualizer");
+        var canvasCtx = canvas.getContext("2d");
+
+        function draw() {
+            requestAnimationFrame(draw);
+            analyser.getByteFrequencyData(dataArray);
+            canvasCtx.fillStyle = 'rgb(255, 255, 255, .03)';
+            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+            var barWidth = (canvas.width / bufferLength) * 2.5;
+            var barHeight;
+            var x = 0;
+            for(var i = 0; i < bufferLength; i++) {
+                barHeight = dataArray[i];
+                canvasCtx.fillStyle = "black";
+                canvasCtx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight / 2);
+                x += barWidth + 2;
+            }
+        }
+
+        function createWaterDrop() {
+            var oscillator = audioCtx.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.05);
+            
+            var gainNode = audioCtx.createGain();
+            gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05); 
+
+            var lowpassFilter = audioCtx.createBiquadFilter();
+            lowpassFilter.type = 'lowpass';
+            lowpassFilter.frequency.setValueAtTime(60, audioCtx.currentTime);
+            
+            oscillator.connect(lowpassFilter);
+            lowpassFilter.connect(gainNode);
+            gainNode.connect(analyser);
+            analyser.connect(audioCtx.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.05);
+        }
+
+        function scheduleNextDrop() {
+            var nextDropTime = Math.random() * 4000 + 1000;
+            setTimeout(function() {
+                createWaterDrop();
+                scheduleNextDrop();
+            }, nextDropTime);
+        }
+
+        document.getElementById('playBtn').addEventListener('click', function() {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            scheduleNextDrop();
+            draw();
+            this.disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', function() {
+            if (audioCtx.state !== 'suspended') {
+                audioCtx.suspend();
+                this.disabled = true;
+                document.getElementById('playBtn').disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
