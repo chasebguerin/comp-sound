@@ -22,11 +22,13 @@ TestingPitchAudioProcessor::TestingPitchAudioProcessor()
                      #endif
                        ),
     // added
-    pitchParameter(nullptr)
+    pitchParameter(nullptr),
+    gainParameter(nullptr)
 #endif
 {
     // added
     addParameter(pitchParameter = new juce::AudioParameterFloat("pitch", "Pitch", -12.0f, 12.0f, 0.0f));
+    addParameter(gainParameter = new juce::AudioParameterFloat("gain", "Gain", 0.0f, 1.0f, 0.5f));
 
 }
 
@@ -35,6 +37,15 @@ void TestingPitchAudioProcessor::setPitch(float newPitch)
 {
     *pitchParameter = newPitch;
 }
+
+void TestingPitchAudioProcessor::setGain(float newGain)
+{
+    if (gainParameter != nullptr)
+    {
+        *gainParameter = newGain;
+    }
+}
+
 
 TestingPitchAudioProcessor::~TestingPitchAudioProcessor()
 {
@@ -165,6 +176,8 @@ void TestingPitchAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     
     // added
     float pitchShiftFactor = powf(2.0, pitchParameter->get() / 12.0);
+    float currentGain = gainParameter->get();
+    
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer (channel);
@@ -182,6 +195,8 @@ void TestingPitchAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             {
                 channelData[sample] = 0;
             }
+            
+            channelData[sample] *= currentGain;
         }
         
         
