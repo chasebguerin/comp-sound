@@ -19,6 +19,7 @@ public:
     //==============================================================================
     // added
     void setPitch(float newPitch);
+    void setGain(float newGain);
     
     
     
@@ -62,6 +63,7 @@ private:
     //==============================================================================
     // added
     juce::AudioParameterFloat* pitchParameter;
+    juce::AudioParameterFloat* gainParameter;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TestingPitchAudioProcessor)
 };
