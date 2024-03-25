@@ -22,6 +22,12 @@ TestingPitchAudioProcessorEditor::TestingPitchAudioProcessorEditor (TestingPitch
     pitchSlider.setRange(-12.0, 12.0);
     pitchSlider.setValue(0);
     pitchSlider.addListener(this);
+    
+    
+    addAndMakeVisible(gainSlider);
+    gainSlider.setRange(0.0, 1.0); // Gain range from 0% to 100%
+    gainSlider.setValue(0.5);      // Default value: 50%
+    gainSlider.addListener(this);
 }
 
 TestingPitchAudioProcessorEditor::~TestingPitchAudioProcessorEditor()
@@ -35,6 +41,10 @@ void TestingPitchAudioProcessorEditor::sliderValueChanged (juce::Slider* slider)
     if (slider == &pitchSlider)
     {
         audioProcessor.setPitch(pitchSlider.getValue());
+    }
+    else if (slider == &gainSlider) // Add this condition
+    {
+        audioProcessor.setGain(gainSlider.getValue());
     }
 }
 
@@ -56,4 +66,6 @@ void TestingPitchAudioProcessorEditor::resized()
     
     // added
     pitchSlider.setBounds(getLocalBounds().reduced(40));
+    
+    gainSlider.setBounds(20, 80, getWidth() - 40, 20);
 }
