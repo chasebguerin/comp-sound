@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf‐8">
+        <title> Hello web audio </title>
+    </head>
+    <body>
+        <p>
+            This is an almost minimal command-based live coding engine. Press the button to re-evaluate your code.
+            This language allows you to specify a rhythmic pattern of beats by entering a space-separated list of times and pitches. 
+            You can also include javascript computation in the values.
+            As an example:
+        </p>
+
+        <p>
+            <b>Regular:</b>
+            <br>
+            1+1@220 2@220*2 1*3@270
+        </p>
+
+        <p>
+            <b>You can also adjust osc type using ,sawtooth ,sine ,triangle:</b>
+            <br>
+            1+1@220,sawtooth 2@220*2 1*3@270
+        </p>
+
+        <p>
+            <b>You can also allow for a repeat option:</b>
+            <br>
+            3@340 2[1@220 2@330] 
+            <br>
+            plays as 
+            <br>
+            3@340 1@220 2@330 1@220 2@330
+        </p>
+
+        <p>
+            <b>You can also combine the repeat option and osc type here:</b>
+            <br>
+            3@340 2[1@220,triangle 2@330]
+        </p>
+
+        <input type="text" id="code" value="1+1@220,sawtooth 2@220*2 1*3@270">
+
+        <button id="re-evaluate-btn">re-evaluate</button>
+
+        <script type="text/javascript">
+            var audioCtx;
+            var osc;
+            var timings;
+            var liveCodeState = [];
+            const playButton = document.getElementById('re-evaluate-btn');
+
+
+            function initAudio() {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)
+                osc = audioCtx.createOscillator();
+                timings = audioCtx.createGain();
+                timings.gain.value = 0;
+                osc.connect(timings).connect(audioCtx.destination);
+                osc.start();
+                scheduleAudio()
+            }
+
+
+            function scheduleAudio() {
+                let timeElapsedSecs = 0;
+                liveCodeState.forEach(noteData => {
+                    let noteOsc = audioCtx.createOscillator();
+                    noteOsc.type = noteData["oscType"];
+                    noteOsc.frequency.setValueAtTime(noteData["pitch"], audioCtx.currentTime + timeElapsedSecs);
+                    
+                    let noteTimings = audioCtx.createGain();
+                    noteTimings.gain.value = 0;
+                    noteOsc.connect(noteTimings).connect(audioCtx.destination);
+                    noteOsc.start(audioCtx.currentTime + timeElapsedSecs);
+                    
+                    noteTimings.gain.setTargetAtTime(1, audioCtx.currentTime + timeElapsedSecs, 0.01)
+                    timeElapsedSecs += noteData["length"]/10.0;
+                    noteTimings.gain.setTargetAtTime(0, audioCtx.currentTime + timeElapsedSecs, 0.01)
+                    timeElapsedSecs += 0.2;
+
+                    noteOsc.stop(audioCtx.currentTime + timeElapsedSecs);
+                });
+                setTimeout(scheduleAudio, timeElapsedSecs * 1000);
+            }
+            
+
+            function parseCode(code) {
+                // how could we allow for a repeat operation 
+                // (e.g. "3@340 2[1@220 2@330]"" plays as "3@340 1@220 2@330 1@220 2@330")
+
+                let repeatExpandCode = code.replace(/\d+\[[^\]]+\]/g, function(match) {
+                    let repeatCount = parseInt(match.match(/^\d+/)[0]);
+                    let repeatedSequence = match.match(/\[([^\]]+)\]/)[1];
+                    return Array(repeatCount).fill(repeatedSequence).join(" ");
+                });
+
+                let notes = repeatExpandCode.split(" ");
+
+
+                // how can we control osc type?
+                notes = notes.map(note => {
+                    let parts = note.split("@");
+                    let oscDetails = parts[1].split(",");
+                    let pitch = eval(oscDetails[0]);
+                    let oscType = oscDetails.length > 1 ? oscDetails[1] : 'sine';
+                    return {
+                        "length": eval(parts[0]),
+                        "pitch": pitch,
+                        "oscType": oscType.trim()
+                    };
+                });
+                return notes;
+            }
+
+            function genAudio(data) {
+                liveCodeState = data;
+            }
+
+            function reevaluate() {
+                var code = document.getElementById('code').value;
+                var data = parseCode(code);
+                genAudio(data);
+            }
+
+            playButton.addEventListener('click', function () {
+                if (!audioCtx) {
+                    initAudio();
+                }
+                reevaluate();
+            });
+
+
+        </script>
+    </body>
+</html>
